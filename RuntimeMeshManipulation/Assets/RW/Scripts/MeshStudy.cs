@@ -33,6 +33,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
+// When a class has this attribute, its Start will fire in both Play mode and Edit mode
 [ExecuteInEditMode]
 public class MeshStudy : MonoBehaviour {
     Mesh originalMesh;
@@ -56,8 +57,10 @@ public class MeshStudy : MonoBehaviour {
         InitMesh();
     }
 
-    public void InitMesh() {
-        // makes a copy of the Mesh, so that we dont edit or overwrite the unity built-in meshes.
+    /// <summary>
+    /// Makes a copy of the Mesh, so that we dont edit or overwrite the unity built-in meshes.
+    /// </summary>
+    public void InitMesh() { 
         meshFilter = GetComponent<MeshFilter>();
         originalMesh = meshFilter.sharedMesh;
         clonedMesh = new Mesh();
@@ -75,7 +78,8 @@ public class MeshStudy : MonoBehaviour {
         isCloned = true;
         Debug.Log("Init & Cloned 2");
     }
-
+    
+    
     public void Reset() {
         if (clonedMesh == null || originalMesh == null) return;
         clonedMesh.vertices = originalMesh.vertices;
@@ -94,11 +98,49 @@ public class MeshStudy : MonoBehaviour {
 
     public void DoAction(int index, Vector3 localPos) {
         // specify methods here
+        //PullOneVertex(index, localPos);
+        PullSimilarVertices(index, localPos);
     }
 
-    // returns List of int that is related to the targetPt.
+   
+
+    public void BuildTriangleList() { }
+    public void ShowTriangle(int idx) { }
+
+    /// <summary>
+    /// Pulls only one vertex pt in the mesh, results in broken mesh.
+    /// </summary>
+    /// <param name="index">selected vertex index</param>
+    /// <param name="newPos"> new position of the selected vertex</param>
+    private void PullOneVertex(int index, Vector3 newPos) { 
+        vertices[index] = newPos;
+        clonedMesh.vertices = vertices;
+        clonedMesh.RecalculateNormals();
+    }
+    
+    /// <summary>
+    /// Pulls all vertices that are at the same location as the vertex at index, does not break mesh.
+    /// </summary>
+    /// <param name="index">selected vertex index</param>
+    /// <param name="newPos"> new position of the selected vertex</param>>
+    private void PullSimilarVertices(int index, Vector3 newPos) {
+        Vector3 targetVertexPos = vertices[index];
+        List<int> relatedVertices = FindRelatedVertices(targetVertexPos, false);
+        foreach (int i in relatedVertices) {
+            vertices[i] = newPos;
+        }
+
+        clonedMesh.vertices = vertices;
+        clonedMesh.RecalculateNormals();
+    }
+    
+    /// <summary>
+    /// Finds the vertices that are at the same location as the vertex at index.
+    /// </summary>
+    /// <param name="targetPt"></param>
+    /// <param name="findConnected"></param>
+    /// <returns></returns>
     private List<int> FindRelatedVertices(Vector3 targetPt, bool findConnected) {
-        // list of int
         List<int> relatedVertices = new List<int>();
 
         int idx = 0;
@@ -141,15 +183,6 @@ public class MeshStudy : MonoBehaviour {
         // return compiled list of int
         return relatedVertices;
     }
-
-    public void BuildTriangleList() { }
-
-    public void ShowTriangle(int idx) { }
-
-    // Pulling only one vertex pt, results in broken mesh.
-    private void PullOneVertex(int index, Vector3 newPos) { }
-
-    private void PullSimilarVertices(int index, Vector3 newPos) { }
 
     // To test Reset function
     public void EditMesh() {

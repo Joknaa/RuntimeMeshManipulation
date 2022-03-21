@@ -34,6 +34,9 @@ using System.Collections;
 using System.Collections.Generic;
 
 
+/// <summary>
+/// When any GameObject with the Mesh Study component attached to it is visible in the Scene view, this class will handle drawing it
+/// </summary>
 [CustomEditor(typeof(MeshStudy))]
 public class MeshInspector : Editor {
     private MeshStudy mesh;
@@ -41,11 +44,17 @@ public class MeshInspector : Editor {
     private Quaternion handleRotation;
     string triangleIdx;
 
+    /// <summary>
+    /// OnSceneGUI is an event method that Unity calls every time it renders the Scene view in the editor
+    /// </summary>
     void OnSceneGUI() {
         mesh = target as MeshStudy;
         EditMesh();
     }
 
+    /// <summary>
+    /// Creating a custom handle for each vertex of the mesh to allow the user to manipulate the mesh in real time.
+    /// </summary>
     void EditMesh() {
         handleTransform = mesh.transform;
         handleRotation = Tools.pivotRotation == PivotRotation.Local ? handleTransform.rotation : Quaternion.identity;
@@ -60,8 +69,11 @@ public class MeshInspector : Editor {
             Vector3 point = handleTransform.TransformPoint(mesh.vertices[index]);
             Handles.color = Color.blue;
             point = Handles.FreeMoveHandle(point, handleRotation, mesh.handleSize, Vector3.zero, Handles.DotHandleCap);
-            
+
             //drag
+            if (GUI.changed) {
+                mesh.DoAction(index, handleTransform.InverseTransformPoint(point));
+            }
         }
         else {
             //click
@@ -69,6 +81,9 @@ public class MeshInspector : Editor {
     }
 
 
+    /// <summary>
+    /// OnInspectorGUI lets you customize the Inspector for your object with extra GUI elements and logic
+    /// </summary>
     public override void OnInspectorGUI() {
         DrawDefaultInspector();
         mesh = target as MeshStudy;
