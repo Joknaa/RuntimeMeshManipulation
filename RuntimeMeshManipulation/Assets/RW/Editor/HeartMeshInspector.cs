@@ -29,30 +29,69 @@
 */
 
 using UnityEditor;
+<<<<<<< HEAD
 using UnityEngine;
 
 [CustomEditor(typeof(HeartMesh))]
 public class HeartMeshInspector : Editor {
+=======
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+
+[CustomEditor(typeof(HeartMesh))]
+public class HeartMeshInspector : Editor
+{
+    private HeartMesh mesh;
+    private Transform handleTransform;
+>>>>>>> parent of 0858a8d (Added Mesh handlers, and ability to control the effect force, radius, and animation duration)
     private Quaternion handleRotation;
     private Transform handleTransform;
     private HeartMesh mesh;
 
+<<<<<<< HEAD
     private void OnSceneGUI() {
+=======
+    void OnSceneGUI()
+    {
+>>>>>>> parent of 0858a8d (Added Mesh handlers, and ability to control the effect force, radius, and animation duration)
         mesh = target as HeartMesh;
         handleTransform = mesh.transform;
         handleRotation = Tools.pivotRotation == PivotRotation.Local ? handleTransform.rotation : Quaternion.identity;
 
+<<<<<<< HEAD
         // Show Handles on Mesh
         if (mesh.isEditMode) {
             if (mesh.originalVertices == null || mesh.normals.Length == 0) mesh.Init();
 
             for (var i = 0; i < mesh.originalVertices.Length; i++) ShowHandle(i);
+=======
+        // ShowHandles on Mesh
+        if (mesh.isEditMode)
+        {
+            if (mesh.originalVertices == null || mesh.normals.Length == 0)
+            {
+                mesh.Init();
+            }
+            for (int i = 0; i < mesh.originalVertices.Length; i++)
+            {
+                ShowHandle(i);
+            }
+>>>>>>> parent of 0858a8d (Added Mesh handlers, and ability to control the effect force, radius, and animation duration)
         }
 
-        // Show/Hide Transform Tool
-        Tools.current = mesh.showTransformHandle ? Tool.Move : Tool.None;
+        // Show/ Hide Transform Tool
+        if (mesh.showTransformHandle)
+        {
+            Tools.current = Tool.Move;
+        }
+        else
+        {
+            Tools.current = Tool.None;
+        }
     }
 
+<<<<<<< HEAD
     /// <summary>
     ///     Creating a custom handle for each vertex of the mesh to allow the user to manipulate the mesh in real time.
     /// </summary>
@@ -63,20 +102,42 @@ public class HeartMeshInspector : Editor {
         if (mesh.selectedIndices.Contains(index)) return;
         Handles.color = Color.blue;
         if (Handles.Button(point, handleRotation, mesh.pickSize, mesh.pickSize, Handles.DotHandleCap)) mesh.selectedIndices.Add(index);
+=======
+    void ShowHandle(int index)
+    {
+        Vector3 point = handleTransform.TransformPoint(mesh.originalVertices[index]);
+
+        // unselected vertex
+        if (!mesh.selectedIndices.Contains(index))
+        {
+        }
+>>>>>>> parent of 0858a8d (Added Mesh handlers, and ability to control the effect force, radius, and animation duration)
     }
 
-    public override void OnInspectorGUI() {
+    public override void OnInspectorGUI()
+    {
         DrawDefaultInspector();
         mesh = target as HeartMesh;
 
         if (mesh.isEditMode || mesh.isMeshReady)
+<<<<<<< HEAD
             if (GUILayout.Button("Show Normals")) {
                 var verts = mesh.modifiedVertices.Length == 0 ? mesh.originalVertices : mesh.modifiedVertices;
                 var normals = mesh.normals;
                 Debug.Log(normals.Length);
                 for (var i = 0; i < verts.Length; i++)
+=======
+        {
+            if (GUILayout.Button("Show Normals"))
+            {
+                Vector3[] verts = mesh.modifiedVertices.Length == 0 ? mesh.originalVertices : mesh.modifiedVertices;
+                Vector3[] normals = mesh.normals; Debug.Log(normals.Length);
+                for (int i = 0; i < verts.Length; i++)
+                {
+>>>>>>> parent of 0858a8d (Added Mesh handlers, and ability to control the effect force, radius, and animation duration)
                     Debug.DrawLine(handleTransform.TransformPoint(verts[i]), handleTransform.TransformPoint(normals[i]), Color.green, 4.0f, true);
             }
+<<<<<<< HEAD
 
         // This adds a custom Reset button in the Inspector
         if (GUILayout.Button("Clear Selected Vertices")) mesh.ClearAllData();
@@ -107,3 +168,10 @@ public class HeartMeshInspector : Editor {
         }
     }
 }
+=======
+        }
+    }
+
+
+}
+>>>>>>> parent of 0858a8d (Added Mesh handlers, and ability to control the effect force, radius, and animation duration)

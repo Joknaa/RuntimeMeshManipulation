@@ -31,9 +31,12 @@
 using UnityEditor;
 using UnityEngine;
 
+<<<<<<< HEAD
 /// <summary>
 ///     When any GameObject with the Mesh Study component attached to it is visible in the Scene view, this class will handle drawing it
 /// </summary>
+=======
+>>>>>>> parent of 0858a8d (Added Mesh handlers, and ability to control the effect force, radius, and animation duration)
 [CustomEditor(typeof(MeshStudy))]
 public class MeshInspector : Editor {
     private Quaternion handleRotation;
@@ -41,18 +44,26 @@ public class MeshInspector : Editor {
     private MeshStudy mesh;
     private string triangleIdx;
 
+<<<<<<< HEAD
     /// <summary>
     ///     OnSceneGUI is an event method that Unity calls every time it renders the Scene view in the editor
     /// </summary>
     private void OnSceneGUI() {
+=======
+    void OnSceneGUI() {
+>>>>>>> parent of 0858a8d (Added Mesh handlers, and ability to control the effect force, radius, and animation duration)
         mesh = target as MeshStudy;
         EditMesh();
     }
 
+<<<<<<< HEAD
     /// <summary>
     ///     Creating a custom handle for each vertex of the mesh to allow the user to manipulate the mesh in real time.
     /// </summary>
     private void EditMesh() {
+=======
+    void EditMesh() {
+>>>>>>> parent of 0858a8d (Added Mesh handlers, and ability to control the effect force, radius, and animation duration)
         handleTransform = mesh.transform;
         handleRotation = Tools.pivotRotation == PivotRotation.Local ? handleTransform.rotation : Quaternion.identity;
         for (var i = 0; i < mesh.vertices.Length; i++) ShowPoint(i);
@@ -64,16 +75,25 @@ public class MeshInspector : Editor {
             var point = handleTransform.TransformPoint(mesh.vertices[index]);
             Handles.color = Color.blue;
             point = Handles.FreeMoveHandle(point, handleRotation, mesh.handleSize, Vector3.zero, Handles.DotHandleCap);
-
+            
             //drag
+<<<<<<< HEAD
             if (GUI.changed) mesh.DoAction(index, handleTransform.InverseTransformPoint(point));
+=======
+        }
+        else {
+            //click
+>>>>>>> parent of 0858a8d (Added Mesh handlers, and ability to control the effect force, radius, and animation duration)
         }
     }
 
 
+<<<<<<< HEAD
     /// <summary>
     ///     OnInspectorGUI lets you customize the Inspector for your object with extra GUI elements and logic
     /// </summary>
+=======
+>>>>>>> parent of 0858a8d (Added Mesh handlers, and ability to control the effect force, radius, and animation duration)
     public override void OnInspectorGUI() {
         DrawDefaultInspector();
         mesh = target as MeshStudy;

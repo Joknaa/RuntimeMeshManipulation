@@ -31,7 +31,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// When a class has this attribute, its Start will fire in both Play mode and Edit mode
 [ExecuteInEditMode]
 public class MeshStudy : MonoBehaviour {
     [HideInInspector] public Vector3[] vertices;
@@ -67,10 +66,15 @@ public class MeshStudy : MonoBehaviour {
         InitMesh();
     }
 
+<<<<<<< HEAD
     /// <summary>
     ///     Makes a copy of the Mesh, so that we dont edit or overwrite the unity built-in meshes.
     /// </summary>
     public void InitMesh() {
+=======
+    public void InitMesh() {
+        // makes a copy of the Mesh, so that we dont edit or overwrite the unity built-in meshes.
+>>>>>>> parent of 0858a8d (Added Mesh handlers, and ability to control the effect force, radius, and animation duration)
         meshFilter = GetComponent<MeshFilter>();
         originalMesh = meshFilter.sharedMesh;
         clonedMesh = new Mesh();
@@ -88,6 +92,21 @@ public class MeshStudy : MonoBehaviour {
         isCloned = true;
         Debug.Log("Init & Cloned 2");
     }
+<<<<<<< HEAD
+=======
+
+    public void Reset() {
+        if (clonedMesh == null || originalMesh == null) return;
+        clonedMesh.vertices = originalMesh.vertices;
+        clonedMesh.triangles = originalMesh.triangles;
+        clonedMesh.normals = originalMesh.normals;
+        clonedMesh.uv = originalMesh.uv;
+        meshFilter.mesh = clonedMesh;
+
+        vertices = clonedMesh.vertices;
+        triangles = clonedMesh.triangles;
+    }
+>>>>>>> parent of 0858a8d (Added Mesh handlers, and ability to control the effect force, radius, and animation duration)
 
     public void GetConnectedVertices() {
         connectedVertices = new List<int>[vertices.Length];
@@ -95,6 +114,7 @@ public class MeshStudy : MonoBehaviour {
 
     public void DoAction(int index, Vector3 localPos) {
         // specify methods here
+<<<<<<< HEAD
         //PullOneVertex(index, localPos);
         PullSimilarVertices(index, localPos);
     }
@@ -137,6 +157,14 @@ public class MeshStudy : MonoBehaviour {
     /// <returns></returns>
     private List<int> FindRelatedVertices(Vector3 targetPt, bool findConnected) {
         var relatedVertices = new List<int>();
+=======
+    }
+
+    // returns List of int that is related to the targetPt.
+    private List<int> FindRelatedVertices(Vector3 targetPt, bool findConnected) {
+        // list of int
+        List<int> relatedVertices = new List<int>();
+>>>>>>> parent of 0858a8d (Added Mesh handlers, and ability to control the effect force, radius, and animation duration)
 
         var idx = 0;
         Vector3 pos;
@@ -174,6 +202,15 @@ public class MeshStudy : MonoBehaviour {
         // return compiled list of int
         return relatedVertices;
     }
+
+    public void BuildTriangleList() { }
+
+    public void ShowTriangle(int idx) { }
+
+    // Pulling only one vertex pt, results in broken mesh.
+    private void PullOneVertex(int index, Vector3 newPos) { }
+
+    private void PullSimilarVertices(int index, Vector3 newPos) { }
 
     // To test Reset function
     public void EditMesh() {
