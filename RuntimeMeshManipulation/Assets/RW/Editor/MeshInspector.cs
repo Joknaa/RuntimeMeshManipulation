@@ -28,76 +28,62 @@
  * THE SOFTWARE.
 */
 
-using UnityEngine;
 using UnityEditor;
-using System.Collections;
-using System.Collections.Generic;
-
+using UnityEngine;
 
 /// <summary>
-/// When any GameObject with the Mesh Study component attached to it is visible in the Scene view, this class will handle drawing it
+///     When any GameObject with the Mesh Study component attached to it is visible in the Scene view, this class will handle drawing it
 /// </summary>
 [CustomEditor(typeof(MeshStudy))]
 public class MeshInspector : Editor {
-    private MeshStudy mesh;
-    private Transform handleTransform;
     private Quaternion handleRotation;
-    string triangleIdx;
+    private Transform handleTransform;
+    private MeshStudy mesh;
+    private string triangleIdx;
 
     /// <summary>
-    /// OnSceneGUI is an event method that Unity calls every time it renders the Scene view in the editor
+    ///     OnSceneGUI is an event method that Unity calls every time it renders the Scene view in the editor
     /// </summary>
-    void OnSceneGUI() {
+    private void OnSceneGUI() {
         mesh = target as MeshStudy;
         EditMesh();
     }
 
     /// <summary>
-    /// Creating a custom handle for each vertex of the mesh to allow the user to manipulate the mesh in real time.
+    ///     Creating a custom handle for each vertex of the mesh to allow the user to manipulate the mesh in real time.
     /// </summary>
-    void EditMesh() {
+    private void EditMesh() {
         handleTransform = mesh.transform;
         handleRotation = Tools.pivotRotation == PivotRotation.Local ? handleTransform.rotation : Quaternion.identity;
-        for (int i = 0; i < mesh.vertices.Length; i++) {
-            ShowPoint(i);
-        }
+        for (var i = 0; i < mesh.vertices.Length; i++) ShowPoint(i);
     }
 
     private void ShowPoint(int index) {
         if (mesh.moveVertexPoint) {
             //draw dot
-            Vector3 point = handleTransform.TransformPoint(mesh.vertices[index]);
+            var point = handleTransform.TransformPoint(mesh.vertices[index]);
             Handles.color = Color.blue;
             point = Handles.FreeMoveHandle(point, handleRotation, mesh.handleSize, Vector3.zero, Handles.DotHandleCap);
 
             //drag
-            if (GUI.changed) {
-                mesh.DoAction(index, handleTransform.InverseTransformPoint(point));
-            }
-        }
-        else {
-            //click
+            if (GUI.changed) mesh.DoAction(index, handleTransform.InverseTransformPoint(point));
         }
     }
 
 
     /// <summary>
-    /// OnInspectorGUI lets you customize the Inspector for your object with extra GUI elements and logic
+    ///     OnInspectorGUI lets you customize the Inspector for your object with extra GUI elements and logic
     /// </summary>
     public override void OnInspectorGUI() {
         DrawDefaultInspector();
         mesh = target as MeshStudy;
 
         //draw reset button
-        if (GUILayout.Button("Reset")) {
-            mesh.Reset();
-        }
+        if (GUILayout.Button("Reset")) mesh.Reset();
 
         // For testing Reset function
-        if (mesh.isCloned) {
-            if (GUILayout.Button("Test Edit")) {
+        if (mesh.isCloned)
+            if (GUILayout.Button("Test Edit"))
                 mesh.EditMesh();
-            }
-        }
     }
 }

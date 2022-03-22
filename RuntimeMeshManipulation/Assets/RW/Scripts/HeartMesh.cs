@@ -28,68 +28,63 @@
  * THE SOFTWARE.
 */
 
-using System;
-using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class HeartMesh : MonoBehaviour {
-    Mesh originalMesh;
-    Mesh clonedMesh;
-    MeshFilter meshFilter;
-    MeshCollider meshCollider;
-
     [HideInInspector] public int targetIndex;
     [HideInInspector] public Vector3 targetVertex;
     [HideInInspector] public Vector3[] originalVertices;
     [HideInInspector] public Vector3[] modifiedVertices;
     [HideInInspector] public Vector3[] normals;
-    [HideInInspector] public bool isMeshReady = false;
-    
+    [HideInInspector] public bool isMeshReady;
+
     public bool isEditMode = true;
     public bool showTransformHandle = true;
     public List<int> selectedIndices = new List<int>();
     public float pickSize = 0.01f;
-
-    #region Moving a vertex should have some influence on the vertices around it to maintain a smooth shape. These variables control that effect
-
-    /// <summary>
-    /// Radius of area affected by the targeted vertex
-    /// </summary>
-    public float radiusOfEffect = 0.3f;
-
-    /// <summary>
-    /// The strength of the pull effect
-    /// </summary>
-    public float pullValue = 0.3f;
-
-    /// <summary>
-    /// How long the animation will run for
-    /// </summary>
-    public float duration = 1.2f;
-
-    /// <summary>
-    /// Current index of the selectedIndices list
-    /// </summary>
-    int currentIndex = 0;
-
-    bool isAnimate = false;
-    float startTime = 0f;
-    float runTime = 0f;
-
-    #endregion
+    private Mesh clonedMesh;
+    private MeshCollider meshCollider;
+    private MeshFilter meshFilter;
+    private Mesh originalMesh;
+    private NonConvexMeshCollider nonConvexMeshCollider;
 
 
-    void Start() {
+    private void Start() {
         Init();
     }
 
+    protected void FixedUpdate() {
+        if (!isAnimate) return; // no animation ? no need to go further.
+
+        runTime = Time.time - startTime; // time since animation started
+
+        if (runTime < duration) { // if animation is still running, move the selected vertex.
+            var targetVertexPos = meshFilter.transform.InverseTransformPoint(targetVertex);
+            DisplaceVertices(targetVertexPos, pullValue, radiusOfEffect);
+        }
+        else { // if animation is done, move to the next vertex.
+            currentIndex++;
+            if (currentIndex < selectedIndices.Count) { // if there are still vertices to move, start the animation again.
+                StartDisplacement();
+            }
+            else { // if there are no more vertices to move, stop the animation, and make a copy of the current mesh.
+                originalMesh = GetComponent<MeshFilter>().mesh;
+                //nonConvexMeshCollider.Calculate();
+                isAnimate = false;
+                isMeshReady = true;
+            }
+        }
+    }
+
     /// <summary>
-    /// Makes a copy of the Mesh, so that we dont edit or overwrite the unity built-in meshes.
+    ///     Makes a copy of the Mesh, so that we dont edit or overwrite the unity built-in meshes.
     /// </summary>
     public void Init() {
         meshFilter = GetComponent<MeshFilter>();
+        nonConvexMeshCollider = GetComponent<NonConvexMeshCollider>();
         meshCollider = GetComponent<MeshCollider>();
+        
         isMeshReady = false;
         currentIndex = 0;
 
@@ -111,16 +106,14 @@ public class HeartMesh : MonoBehaviour {
             originalVertices = originalMesh.vertices;
             normals = originalMesh.normals;
             modifiedVertices = new Vector3[originalVertices.Length];
-            for (int i = 0; i < originalVertices.Length; i++) {
-                modifiedVertices[i] = originalVertices[i];
-            }
+            for (var i = 0; i < originalVertices.Length; i++) modifiedVertices[i] = originalVertices[i];
 
             StartDisplacement();
         }
     }
 
     /// <summary>
-    /// StartDisplacement is what actually moves the vertices. It only runs when isEditMode is false.
+    ///     StartDisplacement is what actually moves the vertices. It only runs when isEditMode is false.
     /// </summary>
     public void StartDisplacement() {
         targetVertex = originalVertices[selectedIndices[currentIndex]];
@@ -128,43 +121,21 @@ public class HeartMesh : MonoBehaviour {
         isAnimate = true;
     }
 
-    protected void FixedUpdate() {
-        if (!isAnimate) return; // no animation ? no need to go further.
+    private void DisplaceVertices(Vector3 targetVertexPos, float force, float radius) {
+        var currentVertexPos = Vector3.zero;
+        var sqrRadius = radius * radius;
 
-        runTime = Time.time - startTime; // time since animation started
-
-        if (runTime < duration) { // if animation is still running, move the selected vertex.
-            Vector3 targetVertexPos = meshFilter.transform.InverseTransformPoint(targetVertex);
-            DisplaceVertices(targetVertexPos, pullValue, radiusOfEffect);
-        }
-        else { // if animation is done, move to the next vertex.
-            currentIndex++;
-            if (currentIndex < selectedIndices.Count) { // if there are still vertices to move, start the animation again.
-                StartDisplacement();
-            }
-            else { // if there are no more vertices to move, stop the animation, and make a copy of the current mesh.
-                originalMesh = GetComponent<MeshFilter>().mesh;
-                isAnimate = false;
-                isMeshReady = true;
-            }
-        }
-    }
-
-    void DisplaceVertices(Vector3 targetVertexPos, float force, float radius) {
-        Vector3 currentVertexPos = Vector3.zero;
-        float sqrRadius = radius * radius;
-
-        for (int i = 0; i < modifiedVertices.Length; i++) { // Loop through all vertices in the mesh
+        for (var i = 0; i < modifiedVertices.Length; i++) { // Loop through all vertices in the mesh
             currentVertexPos = modifiedVertices[i];
-            float sqrMagnitude = (currentVertexPos - targetVertexPos).sqrMagnitude; // get the distance between the current vertex and the targeted vertex (squared)
+            var sqrMagnitude = (currentVertexPos - targetVertexPos).sqrMagnitude; // get the distance between the current vertex and the targeted vertex (squared)
             if (sqrMagnitude > sqrRadius) continue; // If this vertex is outside the area of effect, do nothing and continues to the next vertex.
-            
-            float distance = Mathf.Sqrt(sqrMagnitude);
-            float falloff = GaussFalloff(distance, radius); // Using this method, we can make the effect more or less smooth.
-            Vector3 translate = (currentVertexPos * force) * falloff; // Displacement vector
+
+            var distance = Mathf.Sqrt(sqrMagnitude);
+            var falloff = GaussFalloff(distance, radius); // Using this method, we can make the effect more or less smooth.
+            var translate = -currentVertexPos * force * falloff; // Displacement vector
             translate.z = 0f;
-            Quaternion rotation = Quaternion.Euler(translate); // Displacement direction (This makes the vertex move "outward", making it seem to puff out from the center)
-            Matrix4x4 m = Matrix4x4.TRS(translate, rotation, Vector3.one);
+            var rotation = Quaternion.Euler(translate); // Displacement direction (This makes the vertex move "outward", making it seem to puff out from the center)
+            var m = Matrix4x4.TRS(translate, rotation, Vector3.one);
             modifiedVertices[i] = m.MultiplyPoint3x4(currentVertexPos);
         }
 
@@ -174,7 +145,7 @@ public class HeartMesh : MonoBehaviour {
     }
 
     /// <summary>
-    /// This clears the values selected by the user.
+    ///     This clears the values selected by the user.
     /// </summary>
     public void ClearAllData() {
         selectedIndices = new List<int>();
@@ -183,32 +154,58 @@ public class HeartMesh : MonoBehaviour {
     }
 
     public Mesh SaveMesh() {
-        Mesh nMesh = new Mesh();
+        var nMesh = new Mesh();
         nMesh.name = "HeartMesh";
         nMesh.vertices = originalMesh.vertices;
         nMesh.triangles = originalMesh.triangles;
         nMesh.normals = originalMesh.normals;
         return nMesh;
-
     }
 
+    #region Moving a vertex should have some influence on the vertices around it to maintain a smooth shape. These variables control that effect
+
+    /// <summary>
+    ///     Radius of area affected by the targeted vertex
+    /// </summary>
+    public float radiusOfEffect = 0.3f;
+
+    /// <summary>
+    ///     The strength of the pull effect
+    /// </summary>
+    public float pullValue = 0.3f;
+
+    /// <summary>
+    ///     How long the animation will run for
+    /// </summary>
+    public float duration = 1.2f;
+
+    /// <summary>
+    ///     Current index of the selectedIndices list
+    /// </summary>
+    private int currentIndex;
+
+    private bool isAnimate;
+    private float startTime;
+    private float runTime;
+
+    #endregion
     #region HELPER FUNCTIONS
 
-    static float LinearFalloff(float dist, float inRadius) {
-        return Mathf.Clamp01(0.5f + (dist / inRadius) * 0.5f);
+    private static float LinearFalloff(float dist, float inRadius) {
+        return Mathf.Clamp01(0.5f + dist / inRadius * 0.5f);
     }
 
     /// <summary>
-    /// Gaussian functions create a smooth bell curve.
+    ///     Gaussian functions create a smooth bell curve.
     /// </summary>
     /// <param name="dist"></param>
     /// <param name="inRadius"></param>
     /// <returns></returns>
-    static float GaussFalloff(float dist, float inRadius) {
+    private static float GaussFalloff(float dist, float inRadius) {
         return Mathf.Clamp01(Mathf.Pow(360, -Mathf.Pow(dist / inRadius, 2.5f) - 0.01f));
     }
 
-    static float NeedleFalloff(float dist, float inRadius) {
+    private static float NeedleFalloff(float dist, float inRadius) {
         return -(dist * dist) / (inRadius * inRadius) + 1.0f;
     }
 

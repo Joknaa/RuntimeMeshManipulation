@@ -28,39 +28,49 @@
  * THE SOFTWARE.
 */
 
-using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-using System;
+using UnityEngine;
 
 // When a class has this attribute, its Start will fire in both Play mode and Edit mode
 [ExecuteInEditMode]
 public class MeshStudy : MonoBehaviour {
-    Mesh originalMesh;
-    Mesh clonedMesh;
-    MeshFilter meshFilter;
-    int[] triangles;
-
     [HideInInspector] public Vector3[] vertices;
 
-    [HideInInspector] public bool isCloned = false;
+    [HideInInspector] public bool isCloned;
 
     // For Editor
     public float radius = 0.2f;
     public float pull = 0.3f;
     public float handleSize = 0.03f;
-    public List<int>[] connectedVertices;
-    public List<Vector3[]> allTriangleList;
     public bool moveVertexPoint = true;
+    public List<Vector3[]> allTriangleList;
+    private Mesh clonedMesh;
+    public List<int>[] connectedVertices;
+    private MeshFilter meshFilter;
+    private Mesh originalMesh;
+    private int[] triangles;
 
-    void Start() {
+
+    public void Reset() {
+        if (clonedMesh == null || originalMesh == null) return;
+        clonedMesh.vertices = originalMesh.vertices;
+        clonedMesh.triangles = originalMesh.triangles;
+        clonedMesh.normals = originalMesh.normals;
+        clonedMesh.uv = originalMesh.uv;
+        meshFilter.mesh = clonedMesh;
+
+        vertices = clonedMesh.vertices;
+        triangles = clonedMesh.triangles;
+    }
+
+    private void Start() {
         InitMesh();
     }
 
     /// <summary>
-    /// Makes a copy of the Mesh, so that we dont edit or overwrite the unity built-in meshes.
+    ///     Makes a copy of the Mesh, so that we dont edit or overwrite the unity built-in meshes.
     /// </summary>
-    public void InitMesh() { 
+    public void InitMesh() {
         meshFilter = GetComponent<MeshFilter>();
         originalMesh = meshFilter.sharedMesh;
         clonedMesh = new Mesh();
@@ -78,19 +88,6 @@ public class MeshStudy : MonoBehaviour {
         isCloned = true;
         Debug.Log("Init & Cloned 2");
     }
-    
-    
-    public void Reset() {
-        if (clonedMesh == null || originalMesh == null) return;
-        clonedMesh.vertices = originalMesh.vertices;
-        clonedMesh.triangles = originalMesh.triangles;
-        clonedMesh.normals = originalMesh.normals;
-        clonedMesh.uv = originalMesh.uv;
-        meshFilter.mesh = clonedMesh;
-
-        vertices = clonedMesh.vertices;
-        triangles = clonedMesh.triangles;
-    }
 
     public void GetConnectedVertices() {
         connectedVertices = new List<int>[vertices.Length];
@@ -102,52 +99,50 @@ public class MeshStudy : MonoBehaviour {
         PullSimilarVertices(index, localPos);
     }
 
-   
 
     public void BuildTriangleList() { }
     public void ShowTriangle(int idx) { }
 
     /// <summary>
-    /// Pulls only one vertex pt in the mesh, results in broken mesh.
+    ///     Pulls only one vertex pt in the mesh, results in broken mesh.
     /// </summary>
     /// <param name="index">selected vertex index</param>
     /// <param name="newPos"> new position of the selected vertex</param>
-    private void PullOneVertex(int index, Vector3 newPos) { 
+    private void PullOneVertex(int index, Vector3 newPos) {
         vertices[index] = newPos;
         clonedMesh.vertices = vertices;
         clonedMesh.RecalculateNormals();
     }
-    
+
     /// <summary>
-    /// Pulls all vertices that are at the same location as the vertex at index, does not break mesh.
+    ///     Pulls all vertices that are at the same location as the vertex at index, does not break mesh.
     /// </summary>
     /// <param name="index">selected vertex index</param>
-    /// <param name="newPos"> new position of the selected vertex</param>>
+    /// <param name="newPos"> new position of the selected vertex</param>
+    /// >
     private void PullSimilarVertices(int index, Vector3 newPos) {
-        Vector3 targetVertexPos = vertices[index];
-        List<int> relatedVertices = FindRelatedVertices(targetVertexPos, false);
-        foreach (int i in relatedVertices) {
-            vertices[i] = newPos;
-        }
+        var targetVertexPos = vertices[index];
+        var relatedVertices = FindRelatedVertices(targetVertexPos, false);
+        foreach (var i in relatedVertices) vertices[i] = newPos;
 
         clonedMesh.vertices = vertices;
         clonedMesh.RecalculateNormals();
     }
-    
+
     /// <summary>
-    /// Finds the vertices that are at the same location as the vertex at index.
+    ///     Finds the vertices that are at the same location as the vertex at index.
     /// </summary>
     /// <param name="targetPt"></param>
     /// <param name="findConnected"></param>
     /// <returns></returns>
     private List<int> FindRelatedVertices(Vector3 targetPt, bool findConnected) {
-        List<int> relatedVertices = new List<int>();
+        var relatedVertices = new List<int>();
 
-        int idx = 0;
+        var idx = 0;
         Vector3 pos;
 
         // loop through triangle array of indices
-        for (int t = 0; t < triangles.Length; t++) {
+        for (var t = 0; t < triangles.Length; t++) {
             // current idx return from tris
             idx = triangles[t];
             // current pos of the vertex
@@ -160,15 +155,11 @@ public class MeshStudy : MonoBehaviour {
                 if (findConnected) {
                     // min
                     // - prevent running out of count
-                    if (t == 0) {
-                        relatedVertices.Add(triangles[t + 1]);
-                    }
+                    if (t == 0) relatedVertices.Add(triangles[t + 1]);
 
                     // max 
                     // - prevent runnign out of count
-                    if (t == triangles.Length - 1) {
-                        relatedVertices.Add(triangles[t - 1]);
-                    }
+                    if (t == triangles.Length - 1) relatedVertices.Add(triangles[t - 1]);
 
                     // between 1 ~ max-1 
                     // - add idx from triangles before t and after t 

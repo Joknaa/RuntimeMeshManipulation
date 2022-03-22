@@ -28,37 +28,26 @@
  * THE SOFTWARE.
 */
 
-using System;
-using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
-public class CustomHeart : MonoBehaviour
-{
-    Mesh oMesh;
-    Mesh cMesh;
-    MeshFilter oFilter;
-
-    [HideInInspector]
-    public int targetIndex;
-
-    [HideInInspector]
-    public Vector3 targetVertex;
-
-    [HideInInspector]
-    public Vector3[] oVertices;
-
-    [HideInInspector]
-    public Vector3[] modifiedVertices;
-
-    [HideInInspector]
-    public Vector3[] normals;
-
+public class CustomHeart : MonoBehaviour {
     // For Editor
-    public enum EditType
-    {
-        AddIndices, RemoveIndices, None
+    public enum EditType {
+        AddIndices,
+        RemoveIndices,
+        None
     }
+
+    [HideInInspector] public int targetIndex;
+
+    [HideInInspector] public Vector3 targetVertex;
+
+    [HideInInspector] public Vector3[] oVertices;
+
+    [HideInInspector] public Vector3[] modifiedVertices;
+
+    [HideInInspector] public Vector3[] normals;
 
     public EditType editType;
 
@@ -72,25 +61,47 @@ public class CustomHeart : MonoBehaviour
 
     // Animation settings
     public float duration = 1.2f;
-    bool isAnimate = false;
-    float starttime = 0f;
-    float runtime = 0f;
-    int currentIndex = 0;
+    private Mesh cMesh;
+    private int currentIndex;
+    private bool isAnimate;
+    private MeshFilter oFilter;
+    private Mesh oMesh;
+    private float runtime;
+    private float starttime;
 
 
-
-    void Start()
-    {
+    private void Start() {
         Init();
     }
 
-    public void Init()
-    {
+    private void FixedUpdate() {
+        if (!isAnimate) return;
+
+        runtime = Time.time - starttime;
+
+        if (runtime < duration) {
+            var relativePoint = oFilter.transform.InverseTransformPoint(targetVertex);
+            DisplaceVertices(relativePoint, pullvalue, radiusofeffect);
+        }
+        else {
+            currentIndex++;
+            if (currentIndex < selectedIndices.Count) {
+                StartDisplacement();
+                Debug.Log("next");
+            }
+            else {
+                oMesh = GetComponent<MeshFilter>().sharedMesh;
+                isAnimate = false;
+                Debug.Log("done");
+            }
+        }
+    }
+
+    public void Init() {
         oFilter = GetComponent<MeshFilter>();
         currentIndex = 0;
 
-        if (editType == EditType.AddIndices || editType == EditType.RemoveIndices)
-        {
+        if (editType == EditType.AddIndices || editType == EditType.RemoveIndices) {
             oMesh = oFilter.sharedMesh;
             cMesh = new Mesh();
             cMesh.name = "clone";
@@ -105,102 +116,52 @@ public class CustomHeart : MonoBehaviour
             normals = cMesh.normals;
             Debug.Log("Init & Cloned");
         }
-        else
-        {
+        else {
             oMesh = oFilter.sharedMesh;
             oVertices = oMesh.vertices;
 
             normals = oMesh.normals;
             modifiedVertices = new Vector3[oVertices.Length];
-            for (int i = 0; i < oVertices.Length; i++)
-            {
-                modifiedVertices[i] = oVertices[i];
-            }
+            for (var i = 0; i < oVertices.Length; i++) modifiedVertices[i] = oVertices[i];
 
             StartDisplacement();
         }
     }
 
-    public void StartDisplacement()
-    {
+    public void StartDisplacement() {
         targetVertex = modifiedVertices[selectedIndices[currentIndex]];
         starttime = Time.time;
         isAnimate = true;
     }
 
-    void FixedUpdate()
-    {
-        if (!isAnimate)
-        {
-            return;
-        }
+    private void DisplaceVertices(Vector3 pos, float force, float radius) {
+        var vert = Vector3.zero;
+        var sqrRadius = radius * radius;
 
-        runtime = Time.time - starttime;
-
-        if (runtime < duration)
-        {
-            Vector3 relativePoint = oFilter.transform.InverseTransformPoint(targetVertex);
-            DisplaceVertices(relativePoint, pullvalue, radiusofeffect);
-        }
-        else
-        {
-            currentIndex++;
-            if (currentIndex < selectedIndices.Count)
-            {
-                StartDisplacement();
-                Debug.Log("next");
-            }
-            else
-            {
-                oMesh = GetComponent<MeshFilter>().sharedMesh;
-                isAnimate = false;
-                Debug.Log("done");
-            }
-        }
-    }
-
-    void DisplaceVertices(Vector3 pos, float force, float radius)
-    {
-        Vector3 vert = Vector3.zero;
-        float sqrRadius = radius * radius;
-
-        for (int i = 0; i < modifiedVertices.Length; i++)
-        {
-            float sqrMagnitude = (modifiedVertices[i] - pos).sqrMagnitude;
-            if (sqrMagnitude > sqrRadius)
-            {
-                continue;
-            }
+        for (var i = 0; i < modifiedVertices.Length; i++) {
+            var sqrMagnitude = (modifiedVertices[i] - pos).sqrMagnitude;
+            if (sqrMagnitude > sqrRadius) continue;
             vert = modifiedVertices[i];
 
-            float distance = Mathf.Sqrt(sqrMagnitude);
-
+            var distance = Mathf.Sqrt(sqrMagnitude);
         }
+
         oMesh.vertices = modifiedVertices;
         oMesh.RecalculateNormals();
     }
 
-    public void ClearAllData()
-    {
+    public void ClearAllData() {
         selectedIndices = new List<int>();
         targetIndex = 0;
         targetVertex = Vector3.zero;
     }
 
-    void CurveType1()
-    {
-    }
+    private void CurveType1() { }
 
-    void CurveType2()
-    {
-    }
+    private void CurveType2() { }
 
-    public void ShowNormals()
-    {
-        for (int i = 0; i < modifiedVertices.Length; i++)
-        {
+    public void ShowNormals() {
+        for (var i = 0; i < modifiedVertices.Length; i++)
             Debug.DrawLine(transform.TransformPoint(modifiedVertices[i]), transform.TransformPoint(normals[i]), Color.green, 4.0f, false);
-        }
     }
 }
-
