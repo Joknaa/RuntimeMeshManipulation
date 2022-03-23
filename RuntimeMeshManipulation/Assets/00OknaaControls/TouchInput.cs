@@ -10,13 +10,11 @@ public static class TouchInput {
     public static void CheckInput() {
         if (Input.touchCount == 0) return;
 
-        Touch touch = Input.GetTouch(0);
-        if (isTouchingScreen(touch)) {
+        var touch = Input.GetTouch(0);
+        if (isTouchingScreen(touch))
             touchDownEvent?.Invoke(touch.position);
-        }
-        else {
+        else
             touchUpEvent?.Invoke();
-        }
     }
 
 
