@@ -601,7 +601,20 @@ PlayerSettings:
   webGLLinkerTarget: 1
   webGLThreadsSupport: 0
   webGLWasmStreaming: 0
-  scriptingDefineSymbols: {}
+  scriptingDefineSymbols:
+    1: CROSS_PLATFORM_INPUT;RealtimeCSG;RealtimeCSG_1;RealtimeCSG_1_4;RealtimeCSG_1_4_08
+    4: CROSS_PLATFORM_INPUT;MOBILE_INPUT
+    7: CROSS_PLATFORM_INPUT;MOBILE_INPUT;RealtimeCSG;RealtimeCSG_1;RealtimeCSG_1_4;RealtimeCSG_1_4_08
+    13: RealtimeCSG;RealtimeCSG_1;RealtimeCSG_1_4;RealtimeCSG_1_4_08
+    14: MOBILE_INPUT;RealtimeCSG;RealtimeCSG_1;RealtimeCSG_1_4;RealtimeCSG_1_4_08
+    19: RealtimeCSG;RealtimeCSG_1;RealtimeCSG_1_4;RealtimeCSG_1_4_08
+    21: RealtimeCSG;RealtimeCSG_1;RealtimeCSG_1_4;RealtimeCSG_1_4_08
+    25: RealtimeCSG;RealtimeCSG_1;RealtimeCSG_1_4;RealtimeCSG_1_4_08
+    28: RealtimeCSG;RealtimeCSG_1;RealtimeCSG_1_4;RealtimeCSG_1_4_08
+    29: RealtimeCSG;RealtimeCSG_1;RealtimeCSG_1_4;RealtimeCSG_1_4_08
+    30: RealtimeCSG;RealtimeCSG_1;RealtimeCSG_1_4;RealtimeCSG_1_4_08
+    32: RealtimeCSG;RealtimeCSG_1;RealtimeCSG_1_4;RealtimeCSG_1_4_08
+    33: RealtimeCSG;RealtimeCSG_1;RealtimeCSG_1_4;RealtimeCSG_1_4_08
   platformArchitecture: {}
   scriptingBackend: {}
   il2cppCompilerConfiguration: {}
